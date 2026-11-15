@@ -1,0 +1,8 @@
+# Redis 8 for the queue, on host port 6380 so it does not clash with a Redis already on 6379.
+# No persistence: queue state is throwaway for these experiments.
+services:
+  redis:
+    image: redis:8.6.8
+    ports:
+      - '6380:6379'
+    command: ['redis-server', '--save', '', '--appendonly', 'no']

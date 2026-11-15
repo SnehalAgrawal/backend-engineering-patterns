@@ -9,7 +9,7 @@ Part of [snehalagrawal.com/work](https://snehalagrawal.com/work/). Each example 
 | Example | What it shows | Status |
 |---|---|---|
 | [`express-api-testing/`](express-api-testing/) | An Express and MongoDB API tested against a real (in-memory) MongoDB: every endpoint and error path, 100% line coverage, CI on Node.js 22 and 24 | Ready (from [app-with-test-cases](https://github.com/SnehalAgrawal/app-with-test-cases)) |
-| `bullmq-producer-consumer/` | Producers and workers on a Redis-backed queue: retries with backoff, failed jobs, and concurrency | Planned |
+| [`bullmq-producer-consumer/`](bullmq-producer-consumer/) | Producers and workers on a Redis-backed BullMQ queue: throughput vs concurrency, retries with exponential backoff, dead letters, duplicate prevention, and crash recovery, each measured; tests in CI | Ready |
 | `kafka-consumer-groups/` | How Kafka spreads partitions across a consumer group, and what happens when a consumer joins or leaves | Planned |
 
 ## Conventions

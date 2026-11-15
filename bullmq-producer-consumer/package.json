@@ -1,0 +1,27 @@
+{
+  "name": "bullmq-producer-consumer",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Producers and workers on a Redis-backed BullMQ queue: concurrency, retries with backoff, dead letters, duplicate prevention, and crash recovery, measured.",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "throughput": "node experiments/throughput.js",
+    "retries": "node experiments/retries.js",
+    "dead-letter": "node experiments/dead-letter.js",
+    "idempotency": "node experiments/idempotency.js",
+    "crash-recovery": "node experiments/crash-recovery.js",
+    "test": "node --test --test-concurrency=1 \"test/*.test.js\"",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "dependencies": {
+    "bullmq": "6.5.3",
+    "ioredis": "5.11.1"
+  },
+  "devDependencies": {
+    "prettier": "3.9.10"
+  }
+}

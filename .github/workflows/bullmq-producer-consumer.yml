@@ -1,0 +1,59 @@
+# Lint, format check, and behaviour tests for bullmq-producer-consumer, on Node.js 22 and 24, against Redis 8.
+name: bullmq-producer-consumer
+
+on:
+  push:
+    paths:
+      - bullmq-producer-consumer/**
+      - eslint.config.js
+      - .github/workflows/bullmq-producer-consumer.yml
+  pull_request:
+    paths:
+      - bullmq-producer-consumer/**
+      - eslint.config.js
+      - .github/workflows/bullmq-producer-consumer.yml
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [22, 24]
+    services:
+      redis:
+        image: redis:8.6.8
+        ports:
+          - 6380:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 2s
+          --health-timeout 2s
+          --health-retries 15
+    defaults:
+      run:
+        working-directory: bullmq-producer-consumer
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+          cache-dependency-path: bullmq-producer-consumer/package-lock.json
+
+      - run: npm ci
+
+      - name: Lint with the repository's ESLint config
+        working-directory: .
+        run: npm install --no-audit --no-fund && npx eslint bullmq-producer-consumer
+
+      - name: Check formatting
+        run: npm run format:check
+
+      - name: Behaviour tests (Redis on localhost:6380)
+        run: npm test
