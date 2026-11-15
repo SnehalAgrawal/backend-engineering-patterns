@@ -1,0 +1,11 @@
+# MongoDB 8.0 for running the server locally, on host port 27018 (tests do not need it; they start an in-memory MongoDB).
+services:
+  mongo:
+    image: mongo:8.0.38
+    ports:
+      - '27018:27017' # host port 27018, so it does not clash with a MongoDB already on 27017
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data: {}

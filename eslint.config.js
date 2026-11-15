@@ -4,7 +4,7 @@ import js from "@eslint/js";
 import globals from "globals";
 
 export default [
-  { ignores: ["**/node_modules/**", "**/.venv/**", "**/dist/**"] },
+  { ignores: ["**/node_modules/**", "**/.venv/**", "**/dist/**", "**/coverage/**"] },
   js.configs.recommended,
   {
     files: ["**/*.js"],
@@ -17,5 +17,10 @@ export default [
       // Unused variables are almost always a mistake; a leading underscore marks an intentional one.
       "no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_", caughtErrors: "none" }],
     },
+  },
+  {
+    // Mocha test files: describe, it, before, beforeEach, ...
+    files: ["**/test/**/*.js"],
+    languageOptions: { globals: globals.mocha },
   },
 ];

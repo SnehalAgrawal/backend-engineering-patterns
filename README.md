@@ -8,7 +8,7 @@ Part of [snehalagrawal.com/work](https://snehalagrawal.com/work/). Each example 
 
 | Example | What it shows | Status |
 |---|---|---|
-| `express-api-testing/` | An Express and MongoDB API with integration tests, API docs, linting, and tests run in CI | Planned (moving from [app-with-test-cases](https://github.com/SnehalAgrawal/app-with-test-cases)) |
+| [`express-api-testing/`](express-api-testing/) | An Express and MongoDB API tested against a real (in-memory) MongoDB: every endpoint and error path, 100% line coverage, CI on Node.js 22 and 24 | Ready (from [app-with-test-cases](https://github.com/SnehalAgrawal/app-with-test-cases)) |
 | `bullmq-producer-consumer/` | Producers and workers on a Redis-backed queue: retries with backoff, failed jobs, and concurrency | Planned |
 | `kafka-consumer-groups/` | How Kafka spreads partitions across a consumer group, and what happens when a consumer joins or leaves | Planned |
 

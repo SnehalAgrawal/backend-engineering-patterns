@@ -1,0 +1,57 @@
+# Lint, format check, and tests with coverage for express-api-testing, on Node.js 22 and 24.
+# Tests start their own in-memory MongoDB, so no database service is needed here.
+name: express-api-testing
+
+on:
+  push:
+    paths:
+      - express-api-testing/**
+      - eslint.config.js
+      - .github/workflows/express-api-testing.yml
+  pull_request:
+    paths:
+      - express-api-testing/**
+      - eslint.config.js
+      - .github/workflows/express-api-testing.yml
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    # A hung test run (for example, a database that never starts) fails here instead of after six hours
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [22, 24]
+    defaults:
+      run:
+        working-directory: express-api-testing
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+          cache-dependency-path: express-api-testing/package-lock.json
+
+      - name: Cache the MongoDB binary the tests download
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/mongodb-binaries
+          key: mongodb-binaries-${{ runner.os }}-${{ hashFiles('express-api-testing/package-lock.json') }}
+
+      - run: npm ci
+
+      - name: Lint with the repository's ESLint config
+        working-directory: .
+        run: npm install --no-audit --no-fund && npx eslint express-api-testing
+
+      - name: Check formatting
+        run: npm run format:check
+
+      - name: Test with coverage (fails below the thresholds in .c8rc.json)
+        run: npm run test:coverage
