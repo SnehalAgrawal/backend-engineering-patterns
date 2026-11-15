@@ -90,6 +90,7 @@ All files    |     100 |     98.3 |     100 |     100 |
 
 - **Against Docker MongoDB:** the same 33 tests passed with `TEST_MONGO_URL` pointing at MongoDB 8.0.38 in Docker.
 - **On Node.js 22 and x86_64 Linux:** the CI steps (`npm ci`, format check, tests with coverage), run in a `node:22-bookworm` container (Node.js 22.23.5, emulated x86_64), also passed all 33 tests with the same coverage.
+- **First CI run:** on GitHub Actions ([run 43731731762](https://github.com/SnehalAgrawal/backend-engineering-patterns/actions/runs/43731731762), 2026-11-15), both jobs passed lint, format check, and tests with coverage: Node.js 22 in 20 s and Node.js 24 in 30 s.
 - **Uncovered branch:** the one left (`errors.js` line 41) is the fallback for a duplicate-key error without key details, which MongoDB did not produce in these tests.
 - **Coverage scope:** `src/server.js` (connect and listen) is excluded from coverage. Every endpoint is tested through `createApp()`.
 
