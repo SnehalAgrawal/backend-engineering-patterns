@@ -1,0 +1,72 @@
+# Lint, format check, and behaviour tests for kafka-consumer-groups, on Node.js 22 and 24, against Kafka 4.
+name: kafka-consumer-groups
+
+on:
+  push:
+    paths:
+      - kafka-consumer-groups/**
+      - eslint.config.js
+      - .github/workflows/kafka-consumer-groups.yml
+  pull_request:
+    paths:
+      - kafka-consumer-groups/**
+      - eslint.config.js
+      - .github/workflows/kafka-consumer-groups.yml
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [22, 24]
+    services:
+      kafka:
+        image: apache/kafka:4.3.2
+        ports:
+          - 9192:9192
+        env:
+          KAFKA_NODE_ID: 1
+          KAFKA_PROCESS_ROLES: broker,controller
+          KAFKA_LISTENERS: EXTERNAL://:9192,CONTROLLER://:9093
+          KAFKA_ADVERTISED_LISTENERS: EXTERNAL://localhost:9192
+          KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+          KAFKA_INTER_BROKER_LISTENER_NAME: EXTERNAL
+          KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+          KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+          KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+          KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+          KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+          KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+        options: >-
+          --health-cmd "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9192"
+          --health-interval 5s
+          --health-timeout 10s
+          --health-retries 24
+    defaults:
+      run:
+        working-directory: kafka-consumer-groups
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+          cache-dependency-path: kafka-consumer-groups/package-lock.json
+
+      - run: npm ci
+
+      - name: Lint with the repository's ESLint config
+        working-directory: .
+        run: npm install --no-audit --no-fund && npx eslint kafka-consumer-groups
+
+      - name: Check formatting
+        run: npm run format:check
+
+      - name: Behaviour tests (Kafka on localhost:9192)
+        run: npm test

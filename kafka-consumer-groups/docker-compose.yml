@@ -1,0 +1,21 @@
+# Single-node Kafka 4 (KRaft, no ZooKeeper) on host port 9192, so it does not clash with another Kafka on 9092.
+# Kafka 4 enables both consumer group protocols: "classic" and the new "consumer" protocol (KIP-848).
+services:
+  kafka:
+    image: apache/kafka:4.3.2
+    ports:
+      - '9192:9192'
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: EXTERNAL://:9192,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: EXTERNAL://localhost:9192
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: EXTERNAL
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      # Do not wait 3 s for more members before the first classic rebalance; keeps timings about the protocol
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0

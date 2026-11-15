@@ -1,0 +1,25 @@
+{
+  "name": "kafka-consumer-groups",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Kafka consumer groups with Kafka 4: partition assignment, rebalances under three protocols (including KIP-848), at-least-once delivery after a crash, and ordering by key, measured.",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "assignment": "node experiments/assignment.js",
+    "rebalance": "node experiments/rebalance.js",
+    "delivery": "node experiments/delivery.js",
+    "ordering": "node experiments/ordering.js",
+    "test": "node --test --test-concurrency=1 \"test/*.test.js\"",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "dependencies": {
+    "@confluentinc/kafka-javascript": "1.11.0"
+  },
+  "devDependencies": {
+    "prettier": "3.9.10"
+  }
+}
