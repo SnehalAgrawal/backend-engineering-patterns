@@ -162,6 +162,16 @@ Kafka keeps order within a partition only. With the order id as the key, all of 
 - **A few runs.** The rebalance figures come from one recorded run and a second, partly overlapped one; delivery from two clean runs.
 - **Client-specific findings.** The `commitOffsets()` timing applies to `@confluentinc/kafka-javascript` 1.11.0. Other clients, or later versions, may confirm commits before resolving.
 
+### A client crash the first CI run found
+
+The first CI run passed on Node.js 24, but on Node.js 22 the test process died with `SIGSEGV` 1.5 seconds in, before any test finished.
+
+- **The timing:** the broker was new, and its log showed it loading the partitions of `__consumer_offsets` (the topic that stores group state, created on the first group request) at the moment the tests started polling `describeGroups`.
+- **Reproduced, and not about Node.js 22:** on Node.js 24, with a new broker each time, calling `describeGroups` before any consumer had joined crashed the process with `SIGSEGV` in 3 of 3 attempts, on the first call. With the workaround below, 3 of 3 new brokers passed, and the test suite passed 4 of 4 on a new broker. The CI run on Node.js 24 had its own new broker and won the race: its consumers' joins had readied the coordinator before the first `describeGroups`.
+- **The likely cause:** a known, open bug in the client ([confluentinc/confluent-kafka-javascript#531](https://github.com/confluentinc/confluent-kafka-javascript/issues/531)). When `describeGroups` gets an error for a group, the native code reads a NULL string and crashes the process instead of rejecting the promise. The issue shows it with unreachable brokers; a coordinator that does not exist yet is another way to get a per-group error. The crash was not traced into the native code here.
+- **The workaround** ([`src/kafka.js`](src/kafka.js)): before the first `describeGroups`, a throwaway consumer joins a throwaway group and waits for its partition (about 3.3 seconds on a new broker). A consumer's join retries the "not ready" error safely, and once it succeeds the coordinator is ready.
+- **The lesson:** a native client can turn a normal error into a crash that no `try`/`catch` can handle. In a service, keep calls like this out of health checks, or run them in a separate process.
+
 ## Background
 
 This example is new in this repository. It uses Confluent's client instead of KafkaJS, because KafkaJS has had no release since February 2023 and does not support Kafka 4's consumer protocol. [`data-engineering-patterns/kafka-druid-streaming`](https://github.com/SnehalAgrawal/data-engineering-patterns/tree/main/kafka-druid-streaming) uses KafkaJS and documents that.
