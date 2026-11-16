@@ -50,23 +50,45 @@ export const uniqueGroup = (label) =>
  * partitions are loaded, describeGroups returns a per-group error. In client 1.11.0 the native code then
  * reads a NULL string and the process crashes with SIGSEGV instead of rejecting
  * (confluentinc/confluent-kafka-javascript#531). A consumer's join retries that error safely.
+ *
+ * A consumer that subscribes before the new topic reaches its metadata gets no partition until the next
+ * metadata refresh (minutes), so each attempt uses a fresh consumer and gives up after `perAttemptMs`.
+ * Admin metadata calls are avoided on purpose: they may share describeGroups' unguarded error path.
  */
-export async function waitForGroupCoordinator() {
+export async function waitForGroupCoordinator({ attempts = 6, perAttemptMs = 10_000 } = {}) {
   const topic = await createTopic('warm-up', 1);
-  const consumer = createConsumer(uniqueGroup('warm-up'));
-  await consumer.connect();
-  await consumer.subscribe({ topics: [topic] });
-  consumer.run({ eachMessage: async () => {} });
-  await waitFor(() => consumer.assignment().length > 0, { everyMs: 100 });
-  await consumer.disconnect();
-  await deleteTopic(topic);
+  try {
+    for (let attempt = 1; ; attempt++) {
+      const consumer = createConsumer(uniqueGroup('warm-up'));
+      try {
+        await consumer.connect();
+        await consumer.subscribe({ topics: [topic] });
+        consumer.run({ eachMessage: async () => {} });
+        await waitFor(() => consumer.assignment().length > 0, {
+          everyMs: 100,
+          timeoutMs: perAttemptMs,
+        });
+        return attempt;
+      } catch (error) {
+        if (attempt >= attempts) throw error;
+      } finally {
+        await consumer.disconnect();
+      }
+    }
+  } finally {
+    await deleteTopic(topic);
+  }
 }
 
 let coordinatorReady;
 
 /** Number of members the broker currently counts in a consumer group. */
 export async function groupMemberCount(groupId) {
-  coordinatorReady ??= waitForGroupCoordinator(); // once per process, before the first describeGroups
+  // Once per process, before the first describeGroups; a failed warm-up is not cached, so the next call retries
+  coordinatorReady ??= waitForGroupCoordinator().catch((error) => {
+    coordinatorReady = undefined;
+    throw error;
+  });
   await coordinatorReady;
   const admin = kafka.admin();
   await admin.connect();

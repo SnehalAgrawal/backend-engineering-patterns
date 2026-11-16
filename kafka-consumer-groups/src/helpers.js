@@ -1,8 +1,8 @@
 export const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export async function waitFor(check, { timeoutMs = 60_000, everyMs = 50 } = {}) {
-  const started = Date.now();
-  while (Date.now() - started < timeoutMs) {
+  const started = performance.now(); // monotonic: a wall-clock jump (for example a VM clock correction) must not end a wait early
+  while (performance.now() - started < timeoutMs) {
     const value = await check();
     if (value) return value;
     await sleep(everyMs);
@@ -24,19 +24,19 @@ export async function waitForStableAssignment(
         .sort((a, b) => a - b),
     );
   let last = '';
-  let since = Date.now();
+  let since = performance.now();
   return waitFor(
     () => {
       const now = snapshot();
       const key = JSON.stringify(now);
       if (key !== last) {
         last = key;
-        since = Date.now();
+        since = performance.now();
       }
       const assigned = now.flat();
       const complete =
         assigned.length === partitionCount && new Set(assigned).size === partitionCount;
-      return complete && Date.now() - since >= stableMs ? now : null;
+      return complete && performance.now() - since >= stableMs ? now : null;
     },
     { timeoutMs },
   );

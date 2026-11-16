@@ -12,7 +12,7 @@
     "rebalance": "node experiments/rebalance.js",
     "delivery": "node experiments/delivery.js",
     "ordering": "node experiments/ordering.js",
-    "test": "node --test --test-concurrency=1 \"test/*.test.js\"",
+    "test": "node --test --test-concurrency=1 --test-force-exit \"test/*.test.js\"",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
